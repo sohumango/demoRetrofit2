@@ -1,0 +1,137 @@
+ref:  https://qiita.com/Nunocky/items/525786b36a3c557e8118
+
+RXJava2 + RetroFit2で WebAPIを叩く
+
+sever:
+    http://weather.livedoor.com/forecast/webservice/json/v1?city=200010
+
+manifest:
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+build.gradle
+    api "io.reactivex.rxjava2:rxjava:2.1.11"
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    api 'com.squareup.retrofit2:retrofit:2.4.0'
+    api 'com.squareup.retrofit2:converter-gson:2.4.0'
+    api 'com.squareup.retrofit2:adapter-rxjava2:2.4.0'
+
+IWeatherAPI.java
+        public interface IWeatherAPI {
+
+            @GET("/forecast/webservice/json/v1")
+            Single<WeatherResponse> getWhether(@Query("city") String cityId);
+        }
+
+
+WeatherResponse.java
+        public class WeatherResponse {
+            List<PinPointLocation> pinPointLocations;
+            String link;
+            List<Forecast> forecasts;
+            Location location;
+            String publicTime;
+            Copyright copyright;
+            String title;
+            Description description;
+
+            static class PinPointLocation {
+                String link;
+                String name;
+            }
+
+            static class Forecast {
+                String dateLavel;
+                String telop;
+                Temperature temperature;
+                Image image;
+            }
+
+            static class Temperature {
+                TemperatureSub min;
+                TemperatureSub max;
+
+                static class TemperatureSub {
+                    String celsius;
+                    String fahrenheit;
+                }
+            }
+
+            static class Image {
+                int width;
+                String url;
+                String title;
+                int height;
+            }
+
+            static class Location {
+                String city;
+                String area;
+                String prefecture;
+            }
+
+            static class Copyright {
+                List<Provider> provider;
+                String link;
+                String title;
+                Image image;
+
+                static class Provider {
+                    String link;
+                    String name;
+                }
+            }
+
+            static class Description {
+                String text;
+                String publicTime;
+            }
+        }
+
+MainActivity : APIアクセスの宣言
+        public class MainActivity extends AppCompatActivity implements android.view.View.OnClickListener {
+
+            private IWeatherAPI weatherApi;
+            private CompositeDisposable compositeDisposable = new CompositeDisposable();
+
+            protected void onCreate(Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+
+
+                Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl("http://weather.livedoor.com")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                    .build();
+
+                weatherApi = retrofit.create(IWeatherAPI.class);
+
+                //add button event:
+                Button clickButton = (Button) findViewById(R.id.button10);
+                clickButton.setOnClickListener(this);
+
+
+                @Override
+                public void onClick(View v) {
+                    Button	btn = (Button)v;
+                    if( btn.getId() == R.id.button10 )	// OK
+                    {
+                        TextView mTextView_Telop = (TextView) findViewById(R.id.textView2);
+                        TextView mEditText_Desc = (TextView) findViewById(R.id.textView3);
+                        final String TAG = "hello";
+
+                        Disposable d = weatherApi.getWhether("200010")
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(
+                                        (response) -> {
+                                            mTextView_Telop.setText(response.forecasts.get(0).telop);
+                                            mEditText_Desc.setText(response.description.text);
+                                        },
+                                        (err) -> {
+                                            Log.d(TAG, err.toString());
+                                            Toast.makeText(MainActivity.this, err.toString(), Toast.LENGTH_SHORT).show();
+                                        }
+                                );
+                        compositeDisposable.add(d);
+                    }
+                }

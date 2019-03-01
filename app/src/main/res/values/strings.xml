@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">demoRetrofit2</string>
+    <string name="action_settings">Settings</string>
+    <string name="button1">Button1</string>
+    <string name="mTextView_Telop">mTextView_Telop</string>
+    <string name="mEditText_Desc">mEditText_Desc</string>
+</resources>
