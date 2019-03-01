@@ -2,6 +2,9 @@ ref:  https://qiita.com/Nunocky/items/525786b36a3c557e8118
 
 RXJava2 + RetroFit2で WebAPIを叩く
 
+@android studio version: 3.3.1
+
+
 sever:
     http://weather.livedoor.com/forecast/webservice/json/v1?city=200010
 
@@ -135,3 +138,4 @@ MainActivity : APIアクセスの宣言
                         compositeDisposable.add(d);
                     }
                 }
+
